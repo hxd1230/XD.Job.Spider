@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title></title>
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <!-- 可选的 Bootstrap 主题文件（一般不用引入） -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+    <script src="https://cdn.bootcss.com/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        $(function () {
+            loadHotCity();
+            loadData(1, "北京", "Python");
+
+            $("#btnSearch").click(function () {
+                var _hotCityName = $("#city .active").text();
+                var _searchName = $("input[type=text]").val();
+                loadData(1, _hotCityName, _searchName);
+            })
+        })
+
+
+        /*
+         *加载热门城市
+         */
+        function loadHotCity() {
+            $.ajax({
+                url: '/HandlerHotCity.ashx',
+                method: 'GET',
+                data: {},
+                success: function (data) {
+                    var _data = JSON.parse(data);
+                    //$("#current_city").val(_data[0]);
+                    var _html = "";
+                    for (var i = 0; i < _data.length; i++) {
+                        var _isCurrent = i == 0 ? "active" : "";
+                        _html += "<li class='" + _isCurrent + "'><a onclick='f(this);' href=\"#\">" + _data[i] + "</a></li>";
+                    }
+                    $("#city").html(_html);
+                }
+            })
+        }
+
+        /*
+         *加载首页数据
+         */
+        function loadData(pageIndex, searchName, kd) {
+            //  var _totalCount;
+            $.ajax({
+                url: '/HandlerAjax.ashx',
+                method: 'GET',
+                data: { pageIndex: pageIndex, city: searchName, kd: kd },
+                success: function (data) {
+                    // _totalCount = JSON.parse(data).content.positionResult.totalCount;
+                    var array = JSON.parse(data).content.positionResult.result;
+                    var _html = "";
+                    for (var i = 0; i < array.length; i++) {
+                        var _url = 'http://www.lagou.com/' + array[i].companyLogo;
+                        var _detail = 'http://www.lagou.com/jobs/' + array[i].positionId + '.html';
+                        _html += "<tr class='text-center'><td><h2>" + (array[i].positionName + '[' + (array[i].district == null ? array[i].city : array[i].district) + ']') + "</h2><span class='money'>" + array[i].salary + "</span><span>" + array[i].workYear + ' / ' + array[i].education + "</span></td><td><h2>" + (array[i].companyShortName) + "</h2><span>" + array[i].industryField + ' / ' + array[i].financeStage + "</span></td><td><img src='" + _url + "' width='60' height='60' /></td><td><a target='_blank' href='" + _detail + "'>转到拉钩详细页面</a></td></tr>";
+                    }
+                    $(".table-data").html(_html);
+                }
+            })
+            if (pageIndex == 1) {
+                loadPage();//加载分页数据
+            }
+        }
+
+        function loadPage(totalCount) {
+            // console.log('totalCount=%s', totalCount);
+            // var length = Math.ceil(totalCount / 15);
+            // console.log('length=%s', length);
+            var _li = "";
+            for (var i = 1; i <= 25; i++) {
+                var _isCurrent = i == 1 ? "active" : "";
+                _li += "<li class='" + _isCurrent + "'><a onclick='func(this);' href=\"#\">" + i + "</a></li>";
+            }
+            $("#page").html(_li);
+        }
+
+        function f(p) {
+            $(p).parent().attr('class', 'active').siblings().attr('class', '');
+            var index = $(p).text();
+        }
+
+        function func(p) {
+            $(p).parent().attr('class', 'active').siblings().attr('class', '');
+            var index = $(p).text();
+            var _hotCityName = $("#city .active").text();
+            var _searchName = $("input[type=text]").val();
+            loadData(index, _hotCityName, _searchName);
+        }
+    </script>
+    <style>
+        #frm {
+            margin-top: 30px;
+        }
+
+        h2 {
+            color: #00b38a;
+            font-size: 16px;
+        }
+
+        .money {
+            margin-right: 1em;
+            font-size: 16px;
+            color: #fd5f39;
+        }
+    </style>
+</head>
+<body>
+    <!--<input type="hidden" id="current_city" />-->
+    <div class="container">
+        <div class="jumbotron">
+            <h1>Hello,各位看官</h1>
+            <p>爬取拉勾求职信息</p>
+            <p class="text-right">Author:贺晓冬 2017/07/15 pm</p>
+            <!--<p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more</a></p>-->
+        </div>
+        <div class="panel panel-default">
+            <form id="frm" role="form">
+                <div class="input-group">
+                    <input type="text" class="form-control" value="Python" placeholder="请输入职位名" />
+                    <span class=" input-group-btn">
+                        <button class="btn btn-info" id="btnSearch" type="button">搜索</button>
+                    </span>
+                </div>
+            </form>
+
+            <div class="panel-body">
+                热门城市：
+            </div>
+            <div class="panel-footer">
+
+                <nav aria-label="Page navigation">
+                    <ul id="city" class="pagination"></ul>
+                </nav>
+
+            </div>
+        </div>
+        <table class="table table-bordered table-hover">
+            <!--<caption class="text-center">
+
+            </caption>-->
+            <thead>
+                <tr>
+                    <th class="text-center">职位名</th>
+                    <th class="text-center">公司名</th>
+                    <!--<th class="text-center">薪资区间</th>-->
+                    <th class="text-center">公司Logo</th>
+                    <th class="text-center"><a href="#">操作</a></th>
+                </tr>
+            </thead>
+            <tbody class="table-data"></tbody>
+        </table>
+        <nav aria-label="Page navigation">
+            <ul id="page" class="pagination"></ul>
+        </nav>
+    </div>
+</body>
+</html>
