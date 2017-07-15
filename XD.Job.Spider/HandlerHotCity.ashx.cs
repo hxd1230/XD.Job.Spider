@@ -12,7 +12,6 @@ namespace XD.Job.Spider
     /// </summary>
     public class HandlerCity : IHttpHandler
     {
-
         public void ProcessRequest(HttpContext context)
         {
             List<string> citys = new List<string>();
